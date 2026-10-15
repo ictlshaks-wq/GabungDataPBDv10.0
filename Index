@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APLIKASI GABUNG DATA PBD V10.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg,#1E3A8A 0%,#172554 100%);
+            transition: all .3s ease;
+        }
+        .btn-gradient:hover:not(:disabled) {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,.1);
+        }
+        .file-list-item {
+            animation: slideUp .35s cubic-bezier(.16,1,.3,1);
+            border-left: 5px solid #3b82f6;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auto-badge,.session-badge,.type-badge-pb,.type-badge-uasa,.type-badge-default {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .auto-badge { background:#f1f5f9; color:#64748b; }
+        .session-badge { background:#dbeafe; color:#1d4ed8; }
+        .type-badge-pb { background:#dcfce7; color:#166534; }
+        .type-badge-uasa { background:#fef9c3; color:#854d0e; }
+        .type-badge-default { background:#e0e7ff; color:#3730a3; }
+        .warning-badge { background:#fee2e2; color:#991b1b; }
+        .app-title {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .035em;
+            line-height: 1.05;
+        }
+        .brand-header { background: #1E3A8A; }
+        .brand-accent { color: #1E3A8A; }
+        .brand-badge { background: #1E3A8A; color: #fff; }
+        .brand-dropzone:hover { border-color: #1E3A8A; background: #eff6ff; }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+<div class="glass-card w-full max-w-7xl mx-auto relative">
+    <div class="relative z-10">
+        <header class="brand-header mb-6 rounded-xl shadow-md p-6">
+            <div class="flex flex-col md:flex-row items-center gap-4">
+                <div class="flex-shrink-0 inline-flex items-center justify-center">
+                    <img src="https://raw.githubusercontent.com/ictlshaks-wq/LOGODGURU/main/LOGO%20JPN%20PUTIH.png"
+                         alt="Logo JPN"
+                         class="h-16 w-auto object-contain"
+                         onerror="this.onerror=null; this.src='https://www.moe.gov.my/images/logo_kpm.png';">
+                </div>
+                <div class="flex-1 w-full">
+                    <h1 class="app-title text-2xl md:text-3xl font-bold text-white">APLIKASI GABUNG DATA PBD V10.0</h1>
+                    <p class="text-white/80 mt-1 text-sm md:text-base">Aplikasi ini dibangunkan oleh JK PBD, Sektor Pembelajaran JPN Pahang 2026.</p>
+                    <p class="text-white/65 mt-1 text-xs">Gabung multi-tahun & multi-sesi • Tingkatan, Kelas, PB &amp; UASA • Versi 10.0</p>
+
+                    <div id="metadataControls" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="bg-white/95 p-3 rounded-xl border border-white/30">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Nama Sekolah</label>
+                            <input id="schoolNameInput" type="text"
+                                   class="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none"
+                                   placeholder="Contoh: SMK Indera Jaya">
+                            <p class="text-[9px] text-slate-400 mt-1">Digunakan sebagai metadata dan nama fail output bersama tahun serta sesi.</p>
+                        </div>
+                        <div class="bg-white/95 p-3 rounded-xl border border-white/30">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Tahun Data</label>
+                            <select id="yearSelect" class="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                            </select>
+                            <p class="text-[9px] text-slate-400 mt-1">Pilih tahun untuk batch fail yang akan dimuat naik.</p>
+                        </div>
+                        <div class="bg-white/95 p-3 rounded-xl border border-white/30">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Sesi Pentaksiran</label>
+                            <select id="assessmentSelect" class="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none">
+                                <option value="PERTENGAHAN SESI AKADEMIK">Pertengahan Sesi Akademik — PB sahaja</option>
+                                <option value="AKHIR SESI AKADEMIK" selected>Akhir Sesi Akademik — PB + UASA</option>
+                            </select>
+                            <p class="text-[9px] text-slate-400 mt-1">Pertengahan Sesi Akademik menerima PB sahaja. Akhir Sesi Akademik menerima PB dan UASA.</p>
+                        </div>
+                    </div>
+                    <div id="batchHelpNote" class="mt-3 rounded-xl bg-blue-50/95 border border-blue-100 px-4 py-3 text-[10px] text-slate-600">
+                        <span class="font-black text-blue-700">Cara guna:</span>
+                        Tetapkan Nama Sekolah, Tahun Data dan Sesi Pentaksiran → muat naik semua fail untuk batch tersebut.
+                        Tukar Tahun/Sesi dan muat naik batch seterusnya. Semua batch kekal dalam senarai sehingga butang Gabung ditekan.
+                        <span class="block mt-1 font-semibold text-red-600">Semakan keselamatan: jika tahun dapat dikesan pada nama fail dan tidak sama dengan Tahun Data yang dipilih, fail akan ditolak.</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mb-6">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Pilih Mod Aplikasi</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button id="modeClassBtn" type="button"
+                            class="mode-btn rounded-xl border-2 border-blue-700 bg-blue-700 px-4 py-4 text-left text-white transition-all">
+                        <div class="text-sm font-extrabold">Gabung Fail Kelas IdME</div>
+                        <div class="mt-1 text-[10px] font-medium text-white/80">Untuk fail mentah kelas daripada portal IdME.</div>
+                    </button>
+                    <button id="modeMasterBtn" type="button"
+                            class="mode-btn rounded-xl border-2 border-slate-200 bg-white px-4 py-4 text-left text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50">
+                        <div class="text-sm font-extrabold">Gabung Fail Gabungan Sedia Ada</div>
+                        <div class="mt-1 text-[10px] font-medium text-slate-500">Untuk gabungkan fail master 2024, 2025, 2026 dan sesi berbeza.</div>
+                    </button>
+                </div>
+                <div id="modeDescription" class="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-[10px] font-semibold text-blue-800">
+                    Mod Fail Kelas IdME aktif — pilih Nama Sekolah, Tahun Data dan Sesi Pentaksiran sebelum muat naik.
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <div id="dropzone" class="brand-dropzone relative border-2 border-dashed border-rose-200 rounded-xl p-8 transition-all cursor-pointer group text-center bg-slate-50/30">
+                <input type="file" id="excelInput" accept=".xlsx,.xls" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <div class="flex flex-col items-center">
+                    <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-7 h-7 brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <p id="uploadTitle" class="text-sm font-extrabold text-slate-700">Muat Naik Fail Excel Kelas Mengikut Batch</p>
+                    <p id="uploadSubtitle" class="text-[10px] text-slate-400 mt-1 italic">Sokong .xls & .xlsx • Tahun dan sesi semasa direkod pada setiap fail yang dimuat naik</p>
+                </div>
+            </div>
+            <div id="sessionRuleNote" class="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-[10px] font-semibold text-emerald-800">
+                Akhir Sesi Akademik: fail PB dan UASA boleh dimuat naik.
+            </div>
+        </div>
+
+        <!-- Rumusan data dimuat naik -->
+        <div id="summaryContainer" class="hidden mb-8">
+            <div class="flex items-center justify-between px-2 mb-3">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">Rumusan Data Dimuat Naik</h3>
+                <span id="summaryStatus" class="text-[9px] font-bold text-slate-400">Dikemas kini automatik</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                    <p class="text-[9px] font-black uppercase tracking-wider text-blue-500">Jumlah</p>
+                    <p id="summaryTotalFiles" class="mt-1 text-2xl font-extrabold text-slate-800">0</p>
+                    <p id="summaryTotalRows" class="text-[10px] font-semibold text-slate-500">0 rekod</p>
+                </div>
+                <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                    <p class="text-[9px] font-black uppercase tracking-wider text-emerald-600">Data PB</p>
+                    <p id="summaryPBFiles" class="mt-1 text-2xl font-extrabold text-emerald-700">0</p>
+                    <p id="summaryPBRows" class="text-[10px] font-semibold text-emerald-700/70">0 rekod</p>
+                </div>
+                <div class="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                    <p class="text-[9px] font-black uppercase tracking-wider text-amber-600">Data UASA</p>
+                    <p id="summaryUASAFiles" class="mt-1 text-2xl font-extrabold text-amber-700">0</p>
+                    <p id="summaryUASARows" class="text-[10px] font-semibold text-amber-700/70">0 rekod</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Belum Dikenal Pasti</p>
+                    <p id="summaryOtherFiles" class="mt-1 text-2xl font-extrabold text-slate-700">0</p>
+                    <p id="summaryOtherRows" class="text-[10px] font-semibold text-slate-500">0 rekod</p>
+                </div>
+            </div>
+            <p class="mt-3 px-2 text-[9px] text-slate-400">Angka besar = bilangan fail. Angka kecil = jumlah rekod/baris data dalam fail.</p>
+        </div>
+
+        <div id="fileListContainer" class="space-y-4 hidden">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">Senarai Fail Diproses</h3>
+                <span id="fileCountBadge" class="brand-badge text-[10px] font-bold px-3 py-1 rounded-full">0 FAIL</span>
+            </div>
+            <div id="fileList" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
+        </div>
+
+        <div class="mt-10">
+            <div class="bg-slate-900 rounded-xl p-5 mb-4 flex flex-col md:flex-row md:items-center justify-between text-white gap-4 border border-slate-700">
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] uppercase font-bold text-slate-500 mb-1 tracking-wider">Pratinjau Nama Fail Akhir</p>
+                    <p id="previewFileName" class="text-xs font-mono truncate italic text-blue-300">Sila muat naik fail...</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 justify-end">
+                    <div id="typeIndicators" class="flex flex-wrap gap-1"></div>
+                    <div id="gradeIndicators" class="flex flex-wrap gap-1"></div>
+                    <div id="sessionIndicators" class="flex flex-wrap gap-1"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <button id="convertBtn" class="w-full btn-gradient text-white font-extrabold py-5 rounded-xl shadow-xl active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed transition-all" disabled>
+                    GABUNG & MUAT TURUN EXCEL (.XLSX)
+                </button>
+                <button id="clearBtn" type="button"
+                        class="px-6 py-5 rounded-xl border-2 border-red-200 bg-red-50 text-red-700 font-extrabold hover:bg-red-100 hover:border-red-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled>
+                    KOSONGKAN DATA
+                </button>
+            </div>
+        </div>
+
+        <div id="statusBox" class="hidden mt-6 p-4 rounded-xl text-[11px] font-bold text-center"></div>
+
+        <div id="errorDetailContainer" class="hidden mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-wider text-red-700">Fail Tidak Dimasukkan</p>
+                    <p class="text-[9px] text-red-500 mt-1">Semak sebab bagi setiap fail sebelum mencuba semula.</p>
+                </div>
+                <span id="errorDetailCount" class="rounded-full bg-red-600 px-3 py-1 text-[9px] font-black text-white">0 FAIL</span>
+            </div>
+            <div id="errorDetailList" class="space-y-2 max-h-64 overflow-y-auto"></div>
+        </div>
+
+        <footer class="mt-8 text-center text-xs font-semibold text-slate-400 pb-2">
+            <p class="uppercase tracking-widest mb-1">Sektor Pembelajaran</p>
+            <p>HAKCIPTA TERPELIHARA@2026</p>
+        </footer>
+    </div>
+</div>
+
+<script>
+    const excelInput = document.getElementById('excelInput');
+    const modeClassBtn = document.getElementById('modeClassBtn');
+    const modeMasterBtn = document.getElementById('modeMasterBtn');
+    const modeDescription = document.getElementById('modeDescription');
+    const metadataControls = document.getElementById('metadataControls');
+    const batchHelpNote = document.getElementById('batchHelpNote');
+    const uploadTitle = document.getElementById('uploadTitle');
+    const uploadSubtitle = document.getElementById('uploadSubtitle');
+    const schoolNameInput = document.getElementById('schoolNameInput');
+    const yearSelect = document.getElementById('yearSelect');
+    const assessmentSelect = document.getElementById('assessmentSelect');
+    const sessionRuleNote = document.getElementById('sessionRuleNote');
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const fileList = document.getElementById('fileList');
+    const fileListContainer = document.getElementById('fileListContainer');
+    const statusBox = document.getElementById('statusBox');
+    const errorDetailContainer = document.getElementById('errorDetailContainer');
+    const errorDetailCount = document.getElementById('errorDetailCount');
+    const errorDetailList = document.getElementById('errorDetailList');
+    const previewFileName = document.getElementById('previewFileName');
+    const fileCountBadge = document.getElementById('fileCountBadge');
+    const gradeIndicators = document.getElementById('gradeIndicators');
+    const typeIndicators = document.getElementById('typeIndicators');
+    const sessionIndicators = document.getElementById('sessionIndicators');
+    const summaryContainer = document.getElementById('summaryContainer');
+    const summaryTotalFiles = document.getElementById('summaryTotalFiles');
+    const summaryTotalRows = document.getElementById('summaryTotalRows');
+    const summaryPBFiles = document.getElementById('summaryPBFiles');
+    const summaryPBRows = document.getElementById('summaryPBRows');
+    const summaryUASAFiles = document.getElementById('summaryUASAFiles');
+    const summaryUASARows = document.getElementById('summaryUASARows');
+    const summaryOtherFiles = document.getElementById('summaryOtherFiles');
+    const summaryOtherRows = document.getElementById('summaryOtherRows');
+
+    let queue = [];
+    let appMode = 'class';
+
+    const LEVEL_WORDS = {
+        SATU: '1', DUA: '2', TIGA: '3', EMPAT: '4', LIMA: '5', ENAM: '6', PERALIHAN: 'PERALIHAN',
+        '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6'
+    };
+
+    // Singkatan kelas yang ditemui dalam set data contoh 2025/2026.
+    // Boleh ditambah jika portal menggunakan singkatan lain.
+    const CLASS_ALIASES = {
+        AMH: 'AMANAH',
+        DEK: 'DEDIKASI',
+        MAJ: 'MAJU'
+    };
+
+    function normalizeClassName(name) {
+        const cleaned = String(name || '')
+            .toUpperCase()
+            .replace(/[_\-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        return CLASS_ALIASES[cleaned] || cleaned;
+    }
+
+    function cleanFileName(fileName) {
+        return String(fileName || '')
+            .toUpperCase()
+            .replace(/\.(XLSX|XLS)$/i, '')
+            .replace(/[_]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function detectDataYearFromFileName(fileName) {
+        const name = cleanFileName(fileName);
+
+        // Format baharu: "... TAHUN 2023"
+        const yearMatch = name.match(/\bTAHUN\s+(20\d{2})\b/i);
+        if (yearMatch) return yearMatch[1];
+
+        // Format sesi akademik lama: "... SESI AKADEMIK 2023 2024"
+        // Untuk metadata tahun data, gunakan tahun pertama sesi.
+        const sessionMatch = name.match(/\bSESI\s+AKADEMIK\s+(20\d{2})\s+(20\d{2})\b/i);
+        if (sessionMatch) return sessionMatch[1];
+
+        return '';
+    }
+
+    function detectFileInfo(fileName) {
+        const name = cleanFileName(fileName);
+        let detectedGrade = '';
+        let className = '';
+        let session = '';
+        let source = 'filename';
+
+        // 1) Format sekolah menengah:
+        // LAPORAN PBD TINGKATAN DUA ADVANCE TAHUN 2026
+        // LAPORAN PBD TINGKATAN DUA AMANAH SESI AKADEMIK 2025 2026
+        const sm = name.match(/\bTINGKATAN\s+(SATU|DUA|TIGA|EMPAT|LIMA|PERALIHAN|1|2|3|4|5)\s+(.+?)\s+(?=TAHUN\s+\d{4}\b|SESI\s+AKADEMIK\s+\d{4}\s+\d{4}\b)/i);
+        if (sm) {
+            detectedGrade = `TINGKATAN ${LEVEL_WORDS[sm[1].toUpperCase()]}`;
+            className = normalizeClassName(sm[2]);
+        }
+
+        // 2) Format sekolah rendah yang setara, jika digunakan nanti.
+        // Contoh: LAPORAN PBD TAHUN EMPAT BESTARI SESI AKADEMIK 2025_2026
+        if (!detectedGrade) {
+            const sr = name.match(/\bTAHUN\s+(SATU|DUA|TIGA|EMPAT|LIMA|ENAM|1|2|3|4|5|6)\s+(.+?)\s+(?=SESI\s+AKADEMIK\s+\d{4}\s+\d{4}\b|TAHUN\s+\d{4}\b)/i);
+            if (sr) {
+                detectedGrade = `TAHUN ${LEVEL_WORDS[sr[1].toUpperCase()]}`;
+                className = normalizeClassName(sr[2]);
+            }
+        }
+
+        // 3) Kesan format lama: SESI AKADEMIK 2025_2026
+        const oldSession = name.match(/\bSESI\s+AKADEMIK\s+(20\d{2})\s+(20\d{2})\b/i);
+        if (oldSession) {
+            session = `${oldSession[1]}/${oldSession[2]}`;
+        }
+
+        // 4) Kesan format baharu mulai 2026: TAHUN 2026 -> 2026 sahaja
+        if (!session) {
+            const yearMatch = name.match(/\bTAHUN\s+(20\d{2})\b/i);
+            if (yearMatch) {
+                session = yearMatch[1];
+            }
+        }
+
+        if (!detectedGrade && !className && !session) source = 'fallback';
+        return { detectedGrade, className, session, source };
+    }
+
+    function getCohortFromData(data) {
+        for (const row of data) {
+            for (const key in row) {
+                const val = String(row[key] ?? '').replace(/[^0-9]/g, '');
+                if (val.length === 12) return val.substring(0, 2);
+            }
+        }
+        return null;
+    }
+
+    // Digunakan hanya jika tingkatan/tahun langsung tidak dapat dikesan daripada nama fail.
+    function detectGradeFromCohort(cohort, sessionText) {
+        if (!cohort) return 'TAHAP TIDAK DIKETAHUI';
+        const startYear = parseInt(String(sessionText).substring(0, 4), 10);
+        if (!startYear) return 'TAHAP TIDAK DIKETAHUI';
+
+        const yy = parseInt(cohort, 10);
+        const birthYear = yy > 30 ? 1900 + yy : 2000 + yy;
+        const age = startYear - birthYear;
+
+        const map = {
+            7:'TAHUN 1', 8:'TAHUN 2', 9:'TAHUN 3', 10:'TAHUN 4', 11:'TAHUN 5', 12:'TAHUN 6',
+            13:'TINGKATAN 1', 14:'TINGKATAN 2', 15:'TINGKATAN 3', 16:'TINGKATAN 4', 17:'TINGKATAN 5'
+        };
+        return map[age] || 'TAHAP TIDAK DIKETAHUI';
+    }
+
+    function detectClassNameFromData(data) {
+        for (const row of data) {
+            for (const key in row) {
+                const k = String(key).toUpperCase().trim();
+                if (k === 'KELAS' || k === 'NAMA KELAS' || k === 'CLASS') {
+                    const value = String(row[key] ?? '').trim();
+                    if (value && !/^\d+$/.test(value)) return normalizeClassName(value);
+                }
+            }
+        }
+        return '';
+    }
+
+    function detectType(jsonData, name) {
+        const fileName = String(name || '').toUpperCase();
+
+        // Baca NILAI SEL sebenar, bukan sekadar mencari huruf dalam CSV.
+        // TD wujud dalam kedua-dua PB dan UASA, jadi TD TIDAK digunakan
+        // sebagai penentu jenis data.
+        const values = [];
+        for (const row of (jsonData || [])) {
+            for (const value of Object.values(row || {})) {
+                const v = String(value ?? '').trim().toUpperCase();
+                if (v) values.push(v);
+            }
+        }
+
+        // PB: mempunyai sekurang-kurangnya satu nilai TP1 hingga TP5.
+        const hasPBGrade = values.some(v => /^TP[1-5]$/.test(v));
+
+        // UASA: mempunyai sekurang-kurangnya satu gred tepat A hingga F.
+        const hasUASAGrade = values.some(v => /^[A-F]$/.test(v));
+
+        // TD hanya untuk maklumat; ia boleh wujud dalam PB atau UASA.
+        const hasTD = values.some(v => v === 'TD');
+
+        // Kandungan fail diberi keutamaan.
+        if (hasPBGrade) return 'PB';
+        if (hasUASAGrade) return 'UASA';
+
+        // Jika fail hanya mengandungi TD / tiada gred yang cukup untuk dikenal pasti,
+        // barulah guna nama fail sebagai fallback.
+        if (/\bUASA\b/.test(fileName)) return 'UASA';
+        if (/\bPBD\b/.test(fileName) || /(^|[^A-Z])PB([^A-Z]|$)/.test(fileName)) return 'PB';
+
+        // Kekal DATA jika tidak cukup bukti untuk membuat klasifikasi.
+        return 'DATA';
+    }
+
+
+    function normalizeRowKeys(row) {
+        const out = {};
+        for (const [key, value] of Object.entries(row || {})) {
+            const normalized = normalizedHeaderKey(key);
+            out[normalized] = value;
+        }
+        return out;
+    }
+
+    function firstNonEmpty(values) {
+        for (const value of values) {
+            const s = String(value ?? '').trim();
+            if (s) return s;
+        }
+        return '';
+    }
+
+    function readMasterMetadata(rows) {
+        const normalizedRows = (rows || []).map(normalizeRowKeys);
+
+        const school = firstNonEmpty(normalizedRows.map(r =>
+            r['NAMA SEKOLAH'] ?? r['NAMA_SEKOLAH'] ?? ''
+        ));
+
+        const year = firstNonEmpty(normalizedRows.map(r =>
+            r['TAHUN DATA'] ?? r['TAHUN_DATA'] ?? r['TAHUN/SESI'] ?? r['TAHUN SESI'] ?? ''
+        ));
+
+        const session = firstNonEmpty(normalizedRows.map(r =>
+            r['SESI PENTAKSIRAN'] ?? r['SESI_PENTAKSIRAN'] ?? r['SESI'] ?? ''
+        ));
+
+        return { school, year, session };
+    }
+
+    async function getMasterWorkbookData(file) {
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type:'array', cellText:true, cellDates:false });
+            const sheets = [];
+
+            for (const sheetName of workbook.SheetNames) {
+                const ws = workbook.Sheets[sheetName];
+                const rows = preserveIdentityColumns(XLSX.utils.sheet_to_json(ws, { defval:'', raw:true }));
+                if (!rows.length) continue;
+
+                let type = String(sheetName || '').trim().toUpperCase();
+                if (type !== 'PB' && type !== 'UASA' && type !== 'DATA') {
+                    type = detectType(rows, file.name);
+                }
+
+                sheets.push({
+                    sheetName,
+                    type,
+                    rows,
+                    meta: readMasterMetadata(rows)
+                });
+            }
+
+            return { workbook, sheets };
+        } catch (err) {
+            console.error('Gagal membaca fail master:', file.name, err);
+            return null;
+        }
+    }
+
+    function setMode(mode) {
+        appMode = mode;
+        const isMaster = mode === 'master';
+
+        modeClassBtn.className = isMaster
+            ? 'mode-btn rounded-xl border-2 border-slate-200 bg-white px-4 py-4 text-left text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50'
+            : 'mode-btn rounded-xl border-2 border-blue-700 bg-blue-700 px-4 py-4 text-left text-white transition-all';
+
+        modeMasterBtn.className = isMaster
+            ? 'mode-btn rounded-xl border-2 border-blue-700 bg-blue-700 px-4 py-4 text-left text-white transition-all'
+            : 'mode-btn rounded-xl border-2 border-slate-200 bg-white px-4 py-4 text-left text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50';
+
+        metadataControls.classList.toggle('hidden', isMaster);
+        batchHelpNote.classList.toggle('hidden', isMaster);
+        sessionRuleNote.classList.toggle('hidden', isMaster);
+
+        if (isMaster) {
+            modeDescription.className = 'mt-3 rounded-xl bg-violet-50 px-4 py-3 text-[10px] font-semibold text-violet-800';
+            modeDescription.textContent = 'Mod Fail Gabungan aktif — muat naik terus fail gabungan sedia ada. Tahun dan sesi akan dibaca daripada metadata dalam fail.';
+            uploadTitle.textContent = 'Muat Naik Fail Gabungan Sedia Ada';
+            uploadSubtitle.textContent = 'Contoh: SK_PIANGGU_PBD_2024_AKHIR_SESI.xlsx • Boleh pilih beberapa tahun dan sesi sekali gus';
+        } else {
+            modeDescription.className = 'mt-3 rounded-xl bg-blue-50 px-4 py-3 text-[10px] font-semibold text-blue-800';
+            modeDescription.textContent = 'Mod Fail Kelas IdME aktif — pilih Nama Sekolah, Tahun Data dan Sesi Pentaksiran sebelum muat naik.';
+            uploadTitle.textContent = 'Muat Naik Fail Excel Kelas Mengikut Batch';
+            uploadSubtitle.textContent = 'Sokong .xls & .xlsx • Tahun dan sesi semasa direkod pada setiap fail yang dimuat naik';
+        }
+
+        // Elak campur dua jenis queue dalam satu sesi
+        queue = [];
+        excelInput.value = '';
+        renderErrorDetails([]);
+        renderFileList();
+        updatePreview();
+        convertBtn.disabled = true;
+        clearBtn.disabled = true;
+        statusBox.classList.add('hidden');
+    }
+
+    modeClassBtn.addEventListener('click', () => setMode('class'));
+    modeMasterBtn.addEventListener('click', () => setMode('master'));
+
+    async function getWorkbookData(file) {
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type:'array', cellText:true, cellDates:false });
+            const firstSheetName = workbook.SheetNames[0];
+            const ws = workbook.Sheets[firstSheetName];
+            const json = preserveIdentityColumns(XLSX.utils.sheet_to_json(ws, { defval:'', raw:true }));
+            return {
+                workbook,
+                jsonData: json,
+                csvStr: XLSX.utils.sheet_to_csv(ws).toUpperCase()
+            };
+        } catch (err) {
+            console.error('Gagal membaca fail:', file.name, err);
+            return null;
+        }
+    }
+
+    function safeFilePart(value) {
+        return String(value || '')
+            .toUpperCase()
+            .trim()
+            .replace(/[^A-Z0-9À-ɏ]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .replace(/_+/g, '_');
+    }
+
+    function updatePreview() {
+        if (!queue.length) {
+            previewFileName.innerText = 'Sila muat naik fail...';
+            typeIndicators.innerHTML = '';
+            gradeIndicators.innerHTML = '';
+            sessionIndicators.innerHTML = '';
+            return;
+        }
+
+        const allGrades = [...new Set(queue.map(i => i.detectedGrade))].sort();
+        const allTypes = [...new Set(queue.map(i => i.type))].sort();
+        const allYears = [...new Set(queue.map(i => i.dataYear))].sort();
+        const allAssessments = [...new Set(queue.map(i => i.assessmentSession))].sort();
+
+        const queueSchools = [...new Set(queue.map(i => String(i.schoolName || '').trim()).filter(Boolean))];
+        const schoolSource = appMode === 'master'
+            ? (queueSchools.length === 1 ? queueSchools[0] : (queueSchools[0] || 'DATA'))
+            : schoolNameInput.value;
+        const school = safeFilePart(schoolSource) || 'DATA';
+        const yearPart = allYears.length > 1
+            ? `${allYears[0]}-${allYears[allYears.length - 1]}`
+            : allYears[0];
+
+        let sessionPart = 'SESI';
+        if (allAssessments.length === 1) {
+            sessionPart = allAssessments[0] === 'PERTENGAHAN SESI AKADEMIK'
+                ? 'PERTENGAHAN_SESI'
+                : 'AKHIR_SESI';
+        } else if (allAssessments.length > 1) {
+            sessionPart = 'PERTENGAHAN_DAN_AKHIR_SESI';
+        }
+
+        previewFileName.innerText = `${school}_PBD_${yearPart}_${sessionPart}.xlsx`;
+
+        typeIndicators.innerHTML = allTypes.map(type => {
+            let colorClass = 'bg-indigo-500';
+            if (type === 'PB') colorClass = 'bg-emerald-500';
+            if (type === 'UASA') colorClass = 'bg-amber-500';
+            return `<div class="px-2 py-1 ${colorClass} text-white rounded-lg text-[9px] font-black whitespace-nowrap shadow-sm">DATA ${escapeHtml(type)}</div>`;
+        }).join('');
+
+        gradeIndicators.innerHTML = allGrades.map(grade =>
+            `<div class="px-2 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black whitespace-nowrap shadow-sm">${escapeHtml(grade)}</div>`
+        ).join('');
+
+        sessionIndicators.innerHTML =
+            allYears.map(year =>
+                `<div class="px-2 py-1 bg-slate-700 text-white rounded-lg text-[9px] font-black whitespace-nowrap shadow-sm">${escapeHtml(year)}</div>`
+            ).join('') +
+            allAssessments.map(session =>
+                `<div class="px-2 py-1 bg-violet-600 text-white rounded-lg text-[9px] font-black whitespace-nowrap shadow-sm">${escapeHtml(session)}</div>`
+            ).join('');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#039;');
+    }
+
+    schoolNameInput.addEventListener('input', updatePreview);
+
+    function updateSessionRuleNote() {
+        if (assessmentSelect.value === 'PERTENGAHAN SESI AKADEMIK') {
+            sessionRuleNote.className = 'mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-[10px] font-semibold text-blue-800';
+            sessionRuleNote.textContent = 'Pertengahan Sesi Akademik: hanya fail Pentaksiran Berterusan (PB) dibenarkan. Fail UASA akan ditolak.';
+        } else {
+            sessionRuleNote.className = 'mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-[10px] font-semibold text-emerald-800';
+            sessionRuleNote.textContent = 'Akhir Sesi Akademik: wajib lengkap dengan PB dan UASA sebelum fail gabungan boleh dijana.';
+        }
+    }
+
+    assessmentSelect.addEventListener('change', updateSessionRuleNote);
+    updateSessionRuleNote();
+
+    function renderErrorDetails(errors) {
+        if (!Array.isArray(errors) || errors.length === 0) {
+            errorDetailContainer.classList.add('hidden');
+            errorDetailList.innerHTML = '';
+            errorDetailCount.textContent = '0 FAIL';
+            return;
+        }
+
+        errorDetailContainer.classList.remove('hidden');
+        errorDetailCount.textContent = `${errors.length} FAIL`;
+
+        errorDetailList.innerHTML = errors.map((err, index) => `
+            <div class="rounded-xl border border-red-100 bg-white p-3">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-black text-red-700">${index + 1}</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="break-all text-[10px] font-extrabold text-slate-700">${escapeHtml(err.fileName)}</p>
+                        <p class="mt-1 text-[10px] font-semibold text-red-600">${escapeHtml(err.reason)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    excelInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        let addedCount = 0;
+        let skipCount = 0;
+        let errorCount = 0;
+        const failureReasons = [];
+
+        for (const file of files) {
+            const isDuplicate = queue.some(item => item.file.name === file.name && item.file.size === file.size);
+            if (isDuplicate) {
+                skipCount++;
+                failureReasons.push({
+                    fileName: file.name,
+                    reason: 'Fail pendua — nama dan saiz fail sama dengan fail yang telah dimuat naik.'
+                });
+                continue;
+            }
+
+            if (appMode === 'master') {
+                const masterData = await getMasterWorkbookData(file);
+
+                if (!masterData || !masterData.sheets.length) {
+                    errorCount++;
+                    failureReasons.push({
+                        fileName: file.name,
+                        reason: 'Fail gabungan tidak dapat dibaca atau tiada sheet data yang sah.'
+                    });
+                    continue;
+                }
+
+                let validSheetCount = 0;
+                for (const sheet of masterData.sheets) {
+                    const meta = sheet.meta || {};
+                    const missing = [];
+                    if (!meta.year) missing.push('TAHUN DATA');
+                    if (!meta.session) missing.push('SESI PENTAKSIRAN');
+
+                    if (missing.length) {
+                        failureReasons.push({
+                            fileName: `${file.name} [${sheet.sheetName}]`,
+                            reason: `Metadata tidak lengkap — tiada ${missing.join(' dan ')}. Gunakan fail gabungan yang mempunyai metadata tahun dan sesi.`
+                        });
+                        errorCount++;
+                        continue;
+                    }
+
+                    queue.push({
+                        file,
+                        workbook: masterData.workbook,
+                        jsonData: sheet.rows,
+                        className: 'MULTI KELAS',
+                        cohort: null,
+                        detectedGrade: 'MULTI TAHAP',
+                        dataYear: String(meta.year).trim(),
+                        detectedDataYear: String(meta.year).trim(),
+                        assessmentSession: String(meta.session).trim().toUpperCase(),
+                        schoolName: String(meta.school || '').trim(),
+                        detectedPeriod: String(meta.year).trim(),
+                        type: sheet.type,
+                        gradeDetectedFromFilename: false,
+                        classDetectedFromFilename: false,
+                        periodDetectedFromFilename: false,
+                        isMaster: true,
+                        sourceSheet: sheet.sheetName
+                    });
+                    validSheetCount++;
+                }
+
+                if (validSheetCount) addedCount++;
+                continue;
+            }
+
+            const workbookData = await getWorkbookData(file);
+            if (!workbookData) {
+                errorCount++;
+                failureReasons.push({
+                    fileName: file.name,
+                    reason: 'Fail Excel tidak dapat dibaca. Fail mungkin rosak, format tidak sah, dilindungi kata laluan atau kandungan fail tidak serasi.'
+                });
+                continue;
+            }
+
+            const fileInfo = detectFileInfo(file.name);
+            const cohort = getCohortFromData(workbookData.jsonData);
+
+            const dataYear = yearSelect.value;
+            const assessmentSession = assessmentSelect.value;
+            const schoolName = schoolNameInput.value.trim();
+
+            // Semak tahun sebenar daripada nama fail jika maklumat itu tersedia.
+            const detectedDataYear = detectDataYearFromFileName(file.name);
+            if (detectedDataYear && detectedDataYear !== dataYear) {
+                errorCount++;
+                failureReasons.push({
+                    fileName: file.name,
+                    reason: `Tahun tidak sepadan — fail dikesan sebagai data ${detectedDataYear}, tetapi Tahun Data yang dipilih ialah ${dataYear}.`
+                });
+                continue;
+            }
+
+            const detectedPeriod = fileInfo.session || dataYear;
+            const detectedGrade = fileInfo.detectedGrade || detectGradeFromCohort(cohort, detectedPeriod);
+            const detectedClass = fileInfo.className || detectClassNameFromData(workbookData.jsonData) || 'KELAS TIDAK DIKETAHUI';
+            const type = detectType(workbookData.jsonData, file.name);
+
+            // Peraturan sesi:
+            // Pertengahan Sesi Akademik = PB sahaja
+            // Akhir Sesi Akademik = PB + UASA
+            if (assessmentSession === 'PERTENGAHAN SESI AKADEMIK' && type === 'UASA') {
+                errorCount++;
+                failureReasons.push({
+                    fileName: file.name,
+                    reason: 'Jenis pentaksiran tidak sesuai — UASA tidak dibenarkan untuk Pertengahan Sesi Akademik. Pertengahan Sesi Akademik menerima PB sahaja.'
+                });
+                continue;
+            }
+
+            queue.push({
+                file,
+                workbook: workbookData.workbook,
+                jsonData: workbookData.jsonData,
+                className: detectedClass,
+                cohort,
+                detectedGrade,
+                dataYear,
+                detectedDataYear,
+                assessmentSession,
+                schoolName,
+                detectedPeriod,
+                type,
+                gradeDetectedFromFilename: Boolean(fileInfo.detectedGrade),
+                classDetectedFromFilename: Boolean(fileInfo.className),
+                periodDetectedFromFilename: Boolean(fileInfo.session)
+            });
+            addedCount++;
+        }
+
+        let msg = '';
+        if (addedCount) msg += `${addedCount} fail berjaya dimasukkan. `;
+        if (skipCount) msg += `${skipCount} fail pendua diabaikan. `;
+        if (errorCount) msg += `${errorCount} fail tidak dimasukkan. Lihat sebab di bawah.`;
+        if (msg) {
+            const statusType = errorCount && !addedCount ? 'error' : (errorCount ? 'info' : (addedCount ? 'success' : 'info'));
+            showStatus(msg.trim(), statusType);
+        }
+
+        renderErrorDetails(failureReasons);
+        renderFileList();
+        updatePreview();
+        convertBtn.disabled = queue.length === 0;
+        clearBtn.disabled = queue.length === 0;
+        excelInput.value = '';
+    });
+
+    function countRows(item) {
+        return Array.isArray(item?.jsonData)
+            ? item.jsonData.filter(row => Object.values(row || {}).some(v => String(v ?? '').trim() !== '')).length
+            : 0;
+    }
+
+    function updateSummary() {
+        const pbItems = queue.filter(i => i.type === 'PB');
+        const uasaItems = queue.filter(i => i.type === 'UASA');
+        const otherItems = queue.filter(i => i.type !== 'PB' && i.type !== 'UASA');
+
+        const sumRows = items => items.reduce((sum, item) => sum + countRows(item), 0);
+
+        summaryContainer.classList.toggle('hidden', queue.length === 0);
+        summaryTotalFiles.textContent = queue.length;
+        summaryTotalRows.textContent = `${sumRows(queue).toLocaleString('ms-MY')} rekod`;
+        summaryPBFiles.textContent = pbItems.length;
+        summaryPBRows.textContent = `${sumRows(pbItems).toLocaleString('ms-MY')} rekod`;
+        summaryUASAFiles.textContent = uasaItems.length;
+        summaryUASARows.textContent = `${sumRows(uasaItems).toLocaleString('ms-MY')} rekod`;
+        summaryOtherFiles.textContent = otherItems.length;
+        summaryOtherRows.textContent = `${sumRows(otherItems).toLocaleString('ms-MY')} rekod`;
+    }
+
+    function renderFileList() {
+        updateSummary();
+        fileListContainer.classList.toggle('hidden', queue.length === 0);
+        fileCountBadge.innerText = `${queue.length} FAIL AKTIF`;
+
+        fileList.innerHTML = queue.map((item,index) => {
+            let labelText = 'DATA';
+            let typeStyle = 'type-badge-default';
+            if (item.type === 'PB') { labelText='DATA PB'; typeStyle='type-badge-pb'; }
+            else if (item.type === 'UASA') { labelText='DATA UASA'; typeStyle='type-badge-uasa'; }
+
+            const classWarning = item.className === 'KELAS TIDAK DIKETAHUI';
+            const gradeWarning = item.detectedGrade.includes('TIDAK DIKETAHUI');
+
+            return `
+            <div class="file-list-item bg-white border border-slate-100 p-4 rounded-xl shadow-sm flex items-center gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <span class="text-[10px] font-black ${gradeWarning ? 'text-red-600' : 'text-blue-600'}">${escapeHtml(item.detectedGrade)}</span>
+                        <span class="${typeStyle}">${labelText}</span>
+                        <span class="session-badge">${escapeHtml(item.dataYear)}${item.detectedDataYear ? ' • DISAHKAN' : ' • MANUAL'}</span>
+                        <span class="px-2 py-[2px] rounded-md bg-violet-100 text-violet-700 text-[9px] font-extrabold uppercase whitespace-nowrap">${escapeHtml(item.assessmentSession)}</span>
+                        <span class="auto-badge">Batch</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 truncate">${escapeHtml(item.file.name)}</p>
+                    <p class="text-[9px] text-slate-400 truncate mb-2">${escapeHtml(item.schoolName || 'Nama sekolah belum diisi')}</p>
+                    ${item.isMaster ? `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            <div class="text-[8px] font-black uppercase text-slate-400">Sheet</div>
+                            <div class="text-[10px] font-bold text-slate-700">${escapeHtml(item.sourceSheet || item.type)}</div>
+                        </div>
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            <div class="text-[8px] font-black uppercase text-slate-400">Tahun</div>
+                            <div class="text-[10px] font-bold text-slate-700">${escapeHtml(item.dataYear)}</div>
+                        </div>
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            <div class="text-[8px] font-black uppercase text-slate-400">Sesi</div>
+                            <div class="text-[10px] font-bold text-slate-700">${escapeHtml(item.assessmentSession)}</div>
+                        </div>
+                    </div>` : `
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1">
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Nama Kelas</label>
+                            <input type="text" value="${escapeHtml(item.className)}"
+                                   oninput="queue[${index}].className = normalizeClassName(this.value); updatePreview();"
+                                   class="w-full ${classWarning ? 'bg-red-50 ring-1 ring-red-200' : 'bg-slate-50'} border-none px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-100"
+                                   placeholder="Nama Kelas">
+                        </div>
+                    </div>`}
+                </div>
+                <button onclick="removeFromQueue(${index})" class="text-slate-300 hover:text-red-500 transition-colors" title="Buang fail">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>`;
+        }).join('');
+    }
+
+    window.removeFromQueue = (index) => {
+        queue.splice(index,1);
+        renderFileList();
+        updatePreview();
+        convertBtn.disabled = queue.length === 0;
+        clearBtn.disabled = queue.length === 0;
+    };
+
+    function normalizedHeaderKey(key) {
+        return String(key || '')
+            .toUpperCase()
+            .replace(/[._\-]/g,' ')
+            .replace(/\s+/g,' ')
+            .trim();
+    }
+
+
+    function isIdentityColumn(key) {
+        const k = normalizedHeaderKey(key);
+        return [
+            'NO IC','NO. IC','NO KP','NO. KP','NOKP','NO K/P','NO. K/P',
+            'NO KAD PENGENALAN','NOMBOR KAD PENGENALAN','MYKAD','IC'
+        ].includes(k);
+    }
+
+    function normalizeIdentityValue(value) {
+        if (value === null || value === undefined || value === '') return '';
+
+        // Jika datang sebagai nombor, tukar kepada integer penuh tanpa notasi saintifik.
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return Math.trunc(value).toLocaleString('fullwide', {
+                useGrouping: false,
+                maximumFractionDigits: 0
+            });
+        }
+
+        let s = String(value).trim();
+
+        // Tangani notasi saintifik seperti 9.01234567891E+11.
+        if (/^[+-]?\d+(\.\d+)?e[+-]?\d+$/i.test(s)) {
+            const n = Number(s);
+            if (Number.isFinite(n)) {
+                s = Math.trunc(n).toLocaleString('fullwide', {
+                    useGrouping: false,
+                    maximumFractionDigits: 0
+                });
+            }
+        }
+
+        // Buang apostrophe Excel di hadapan jika ada.
+        s = s.replace(/^'/, '');
+
+        // Untuk IC Malaysia, kekalkan digit sahaja jika jelas 12 digit selepas buang pemisah.
+        const digits = s.replace(/\D/g, '');
+        if (digits.length === 12) return digits;
+
+        return s;
+    }
+
+    function preserveIdentityColumns(rows) {
+        return (rows || []).map(row => {
+            const out = { ...row };
+            for (const key of Object.keys(out)) {
+                if (isIdentityColumn(key)) {
+                    out[key] = normalizeIdentityValue(out[key]);
+                }
+            }
+            return out;
+        });
+    }
+
+    function shouldRemoveSourceColumn(key) {
+        const k = normalizedHeaderKey(key);
+        return ['BIL','NO BIL','KELAS','NAMA KELAS','CLASS','TAHUN','TINGKATAN','SESI','TAHAP','TAHUN/SESI','TAHUN SESI','TAHUN DATA','TAHUN_DATA','SESI PENTAKSIRAN','SESI_PENTAKSIRAN','NAMA SEKOLAH','NAMA_SEKOLAH'].includes(k);
+    }
+
+    function cleanRows(item, counter) {
+        return preserveIdentityColumns(item.jsonData).map(row => {
+            const cleaned = {};
+            for (const k in row) {
+                if (!shouldRemoveSourceColumn(k)) cleaned[k] = row[k];
+            }
+            return {
+                'NO BIL': counter.value++,
+                'NAMA SEKOLAH': item.schoolName || '',
+                'TAHUN DATA': item.dataYear,
+                'SESI PENTAKSIRAN': item.assessmentSession,
+                'TAHAP': item.detectedGrade,
+                'KELAS': item.className,
+                ...cleaned
+            };
+        });
+    }
+
+
+    function forceIdentityColumnsAsText(ws) {
+        if (!ws || !ws['!ref']) return;
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        const headerMap = {};
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            const addr = XLSX.utils.encode_cell({ r: range.s.r, c });
+            const cell = ws[addr];
+            if (!cell) continue;
+            headerMap[c] = String(cell.v ?? '');
+        }
+
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            if (!isIdentityColumn(headerMap[c])) continue;
+
+            for (let r = range.s.r + 1; r <= range.e.r; r++) {
+                const addr = XLSX.utils.encode_cell({ r, c });
+                const cell = ws[addr];
+                if (!cell || cell.v === null || cell.v === undefined || cell.v === '') continue;
+
+                cell.v = normalizeIdentityValue(cell.v);
+                cell.t = 's';
+                cell.z = '@';
+            }
+        }
+    }
+
+    function setUsefulColumnWidths(ws) {
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+        const widths = [];
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            let maxLen = 10;
+            for (let r = range.s.r; r <= Math.min(range.e.r, 200); r++) {
+                const cell = ws[XLSX.utils.encode_cell({r,c})];
+                if (!cell || cell.v == null) continue;
+                maxLen = Math.max(maxLen, String(cell.v).length);
+            }
+            widths.push({ wch: Math.min(maxLen + 2, 38) });
+        }
+        ws['!cols'] = widths;
+        ws['!autofilter'] = { ref: ws['!ref'] };
+    }
+
+    clearBtn.addEventListener('click', () => {
+        if (!queue.length) return;
+
+        const confirmClear = window.confirm('Kosongkan semua data yang telah dimuat naik?');
+        if (!confirmClear) return;
+
+        queue = [];
+        excelInput.value = '';
+
+        renderFileList();
+        updatePreview();
+
+        convertBtn.disabled = true;
+        clearBtn.disabled = true;
+
+        statusBox.classList.add('hidden');
+        statusBox.innerText = '';
+        renderErrorDetails([]);
+    });
+
+
+    function validateFinalSessionCompleteness(items) {
+        const groups = new Map();
+
+        for (const item of items) {
+            const session = String(item.assessmentSession || '').toUpperCase();
+            if (session !== 'AKHIR SESI AKADEMIK') continue;
+
+            const year = String(item.dataYear || '').trim() || 'TAHUN TIDAK DIKETAHUI';
+            const key = year;
+
+            if (!groups.has(key)) {
+                groups.set(key, { year, hasPB:false, hasUASA:false });
+            }
+
+            const group = groups.get(key);
+            if (item.type === 'PB') group.hasPB = true;
+            if (item.type === 'UASA') group.hasUASA = true;
+        }
+
+        const problems = [];
+        for (const group of groups.values()) {
+            if (!group.hasPB || !group.hasUASA) {
+                let missing = [];
+                if (!group.hasPB) missing.push('PB');
+                if (!group.hasUASA) missing.push('UASA');
+
+                problems.push(
+                    `Data Akhir Sesi Akademik ${group.year} belum lengkap — tiada ${missing.join(' dan ')}.`
+                );
+            }
+        }
+
+        return problems;
+    }
+
+    convertBtn.addEventListener('click', async () => {
+        try {
+            let currentSchoolName = '';
+
+            if (appMode === 'class') {
+                if (!schoolNameInput.value.trim()) {
+                    showStatus('Sila isi Nama Sekolah sebelum menjana fail gabungan.', 'error');
+                    schoolNameInput.focus();
+                    return;
+                }
+                currentSchoolName = schoolNameInput.value.trim();
+                queue.forEach(item => item.schoolName = currentSchoolName);
+            } else {
+                const schools = [...new Set(queue.map(i => String(i.schoolName || '').trim()).filter(Boolean))];
+                currentSchoolName = schools.length === 1 ? schools[0] : (schools[0] || 'DATA GABUNGAN');
+            }
+
+            const invalid = appMode === 'class'
+                ? queue.filter(i => i.className === 'KELAS TIDAK DIKETAHUI' || i.detectedGrade.includes('TIDAK DIKETAHUI'))
+                : [];
+            if (invalid.length) {
+                showStatus(`Terdapat ${invalid.length} fail yang Tingkatan/Tahun atau Nama Kelas belum dikenal pasti. Sila semak sebelum gabung.`, 'error');
+                return;
+            }
+
+            const finalSessionProblems = validateFinalSessionCompleteness(queue);
+            if (finalSessionProblems.length) {
+                showStatus(
+                    `${finalSessionProblems.join(' ')} Untuk Akhir Sesi Akademik, fail PB dan UASA perlu dimuat naik sebelum digabungkan.`,
+                    'error'
+                );
+                return;
+            }
+
+            showStatus('Menjana fail Excel multi-tab...', 'info');
+
+            let pbData = [];
+            let uasaData = [];
+            let otherData = [];
+            const pbCounter = {value:1};
+            const uasaCounter = {value:1};
+            const otherCounter = {value:1};
+
+            for (const item of queue) {
+                const rows = item.isMaster
+                    ? item.jsonData.map(row => ({ ...row }))
+                    : cleanRows(
+                        item,
+                        item.type === 'PB' ? pbCounter : item.type === 'UASA' ? uasaCounter : otherCounter
+                    );
+
+                if (item.type === 'PB') pbData = pbData.concat(rows);
+                else if (item.type === 'UASA') uasaData = uasaData.concat(rows);
+                else otherData = otherData.concat(rows);
+            }
+
+            // Jika gabung fail master, nombor bil disusun semula selepas semua tahun/sesi dicantum.
+            if (appMode === 'master') {
+                const renumber = rows => rows.map((row, idx) => ({ ...row, 'NO BIL': idx + 1 }));
+                pbData = renumber(pbData);
+                uasaData = renumber(uasaData);
+                otherData = renumber(otherData);
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            if (pbData.length) {
+                const wsPB = XLSX.utils.json_to_sheet(pbData);
+                forceIdentityColumnsAsText(wsPB);
+                setUsefulColumnWidths(wsPB);
+                XLSX.utils.book_append_sheet(wb,wsPB,'PB');
+            }
+            if (uasaData.length) {
+                const wsUASA = XLSX.utils.json_to_sheet(uasaData);
+                forceIdentityColumnsAsText(wsUASA);
+                setUsefulColumnWidths(wsUASA);
+                XLSX.utils.book_append_sheet(wb,wsUASA,'UASA');
+            }
+            if (otherData.length) {
+                const wsOther = XLSX.utils.json_to_sheet(otherData);
+                forceIdentityColumnsAsText(wsOther);
+                setUsefulColumnWidths(wsOther);
+                XLSX.utils.book_append_sheet(wb,wsOther,'DATA');
+            }
+
+            XLSX.writeFile(wb,previewFileName.innerText);
+            const uniqueFiles = new Set(queue.map(i => `${i.file.name}|${i.file.size}`)).size;
+            const pbParts = queue.filter(i => i.type === 'PB').length;
+            const uasaParts = queue.filter(i => i.type === 'UASA').length;
+            const years = [...new Set(queue.map(i => i.dataYear))].sort().join(', ');
+            const sessions = [...new Set(queue.map(i => i.assessmentSession))].sort().join(' + ');
+            showStatus(`Berjaya! ${uniqueFiles} fail digabungkan untuk ${currentSchoolName}. Tahun: ${years}. Sesi: ${sessions}. Komponen PB: ${pbParts}, UASA: ${uasaParts}.`, 'success');
+        } catch (err) {
+            console.error(err);
+            showStatus('Ralat semasa proses penjanaan Excel. Sila semak Console untuk maklumat lanjut.', 'error');
+        }
+    });
+
+    function showStatus(msg,type) {
+        statusBox.innerText = msg;
+        statusBox.className = `mt-6 p-4 rounded-xl text-[11px] font-bold text-center ${
+            type === 'success' ? 'bg-green-100 text-green-700' :
+            type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+        }`;
+        statusBox.classList.remove('hidden');
+    }
+
+    // Mod lalai
+    setMode('class');
+</script>
+</body>
+</html>
